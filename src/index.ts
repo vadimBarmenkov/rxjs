@@ -1,9 +1,35 @@
 import { ajax } from 'rxjs/ajax';
+import { of } from 'rxjs';
+import { map, catchError} from "rxjs/operators";
 
-const data$ = ajax.getJSON('https://api.github.com/search/repositories?q=rxjs');
 
-data$.subscribe((value) => console.log('data$ value', value));
 
-const dataGitLab$ = ajax.getJSON('https://gitlab.com/api/v4/projects?search=nodejs');
 
-dataGitLab$.subscribe((value) => console.log('dataGitLab$ value', value));
+const createCancellableRequest = (url) => {
+
+    const observable = ajax.getJSON(url).pipe(
+        map(value => console.log('value: ', value)),
+        catchError(error => {
+            console.log('error: ', error);
+            return of(error);
+        })
+    );
+
+    observable.subscribe({
+        next: value => console.log(value),
+        error: err => console.log(err)
+    });
+
+};
+const getUsersRepsFromGitHubAPI = (textRequest) => {
+    const url = `https://api.github.com/search/repositories?q=${textRequest}`;
+    return createCancellableRequest(url);
+}
+
+const getUsersRepsFromGitLibAPI = (textRequest) => {
+    const url = `https://gitlab.com/api/v4/projects?search=${textRequest}`;
+    return createCancellableRequest(url);
+}
+
+getUsersRepsFromGitHubAPI("rxjs");
+getUsersRepsFromGitLibAPI("nodejs");
